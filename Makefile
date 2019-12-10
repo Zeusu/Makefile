@@ -1,26 +1,46 @@
-CC = g++
-CFLAGS = -Wall -W -I include
-LFLAGS = #-L lib -lsomelib
-
-EXT = cpp
-EXEC = exec
 OBJDIR = obj
 TRGDIR = target
 SRCDIR = src
+LIBDIR = lib
+INCLUDEDIR = include
 
-SRC = $(wildcard src/*.$(EXT))
-OBJ = $(SRC:.$(EXT)=.o) 
+CC = g++
+CFLAGS = -Wall -W -I $(INCLUDEDIR)
+LFLAGS = #-L $(LIBDIR) -lsomelib
+
+EXT_HEAD = hpp
+EXT_SRC = cpp
+
+EXEC = exec
+MAIN_FILE = Main
+
+HEADERS = $(wildcard $(SRCDIR)/*.$(EXT_HEAD))
+SRC = $(HEADERS:.$(EXT_HEAD)=$(EXT_SRC))
+OBJ = $(SRC:.$(EXT_SRC)=.o) 
 OBJ := $(subst $(SRCDIR),$(OBJDIR),$(OBJ)) 
 
 all:
 	@make $(TRGDIR)/$(EXEC)
 
-$(TRGDIR)/$(EXEC): $(OBJ)
+$(TRGDIR)/$(EXEC): $(OBJDIR)/$(MAIN_FILE).o $(OBJ)
 	@$(CC) -o $@ $^ $(LFLAGS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.$(EXT)
+$(OBJDIR)/$(MAIN_FILE).o: $(SRCDIR)/$(MAIN_FILE).$(EXT_SRC) $(HEADERS)
+	@$(CC) -o $@ -c $< $(CFLAGS)
+
+$(OBJDIR)/%.o: $(HEADERS)
 	@$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
 	@rm -rf $(OBJDIR)/*.o
 	@rm $(TRGDIR)/$(EXEC)
+
+prepare: 
+	@mkdir $(OBJDIR)
+	@mkdir $(TRGDIR)
+	@mkdir $(SRCDIR)
+	@mkdir $(LIBDIR)
+	@mkdir $(INCLUDEDIR)
+
+run:
+	$(TRGDIR)/$(EXEC)
